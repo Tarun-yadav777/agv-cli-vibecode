@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA World Cup 2026™ Match Tracker & Standings</title>
+    
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="Official finished match results, upcoming fixture schedules, and group standings for the FIFA World Cup 2026.">
+    <meta name="keywords" content="FIFA World Cup 2026, World Cup Standings, Official Results, Soccer Tracker, Upcoming Matches">
+    <meta name="author" content="Antigravity Sports">
+
+    <!-- CSS Stylings -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Application Header -->
+        <header>
+            <div class="header-container">
+                <div class="logo-container">
+                    <div class="logo-badge" aria-label="FIFA World Cup Logo">WC 2026</div>
+                    <div class="logo-title">
+                        <h1>FIFA WORLD CUP 2026™</h1>
+                        <p>Official Match Tracker & Group Standings</p>
+                    </div>
+                </div>
+                
+                <div class="controls-container">
+                    <button id="btn-refresh" class="btn btn-primary" title="Sync scores with tournament database">
+                        <i class="fas fa-sync-alt"></i> Sync Matchday Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Current Matchday Information Banner -->
+        <div class="simulation-banner">
+            <div class="simulation-info">
+                <div class="simulation-info-pulse"></div>
+                <div class="simulation-info-text">
+                    Current Date: <strong>Thursday, June 18, 2026 (Matchday 2 in progress)</strong>
+                    <span class="status-pill">Official FIFA Data</span>
+                </div>
+            </div>
+            <div class="simulation-info-text text-dim">
+                Matches hosted across <strong>USA, Canada, & Mexico</strong>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Column: Match Lists -->
+            <section class="matches-panel-container" aria-label="World Cup Matches">
+                
+                <!-- Upcoming Matches -->
+                <div id="upcoming-section" class="panel {% if not has_upcoming %}hidden{% endif %}">
+                    <div class="panel-title">
+                        <h2>Upcoming Scheduled Matches</h2>
+                        <span class="badge badge-blue">UPCOMING</span>
+                    </div>
+                    <div id="upcoming-matches-list" class="matches-list">
+                        {% for m in upcoming_matches %}
+                        <div class="match-card" data-id="{{ m.id }}">
+                            <div class="match-meta">
+                                <span class="match-group-info">{{ m.group }}</span>
+                                <span class="match-stadium">{{ m.stadium }}</span>
+                                <span>{{ m.date }}</span>
+                            </div>
+                            
+                            <div class="match-content-grid">
+                                <div class="team-display home">
+                                    <span class="team-name">{{ m.home_team }}</span>
+                                    <img src="https://flagcdn.com/w80/{{ m.home_flag }}.png" alt="{{ m.home_team }} Flag" class="flag-logo">
+                                </div>
+                                
+                                <div class="score-center">
+                                    <div class="score-display">
+                                        <span>0</span>
+                                        <span class="score-divider">:</span>
+                                        <span>0</span>
+                                    </div>
+                                    <div class="match-time-badge">{{ m.time }}</div>
+                                </div>
+                                
+                                <div class="team-display away">
+                                    <img src="https://flagcdn.com/w80/{{ m.away_flag }}.png" alt="{{ m.away_team }} Flag" class="flag-logo">
+                                    <span class="team-name">{{ m.away_team }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Finished Matches -->
+                <div id="finished-section" class="panel">
+                    <div class="panel-title">
+                        <h2>Completed Match Results</h2>
+                        <span class="badge">RESULTS</span>
+                    </div>
+                    <div id="finished-matches-list" class="matches-list">
+                        {% for m in finished_matches %}
+                        <div class="match-card" data-id="{{ m.id }}" data-home-score="{{ m.home_score }}" data-away-score="{{ m.away_score }}">
+                            <div class="match-meta">
+                                <span class="match-group-info">{{ m.group }}</span>
+                                <span class="match-stadium">{{ m.stadium }}</span>
+                                <span>{{ m.date }}</span>
+                            </div>
+                            
+                            <div class="match-content-grid">
+                                <div class="team-display home">
+                                    <span class="team-name">{{ m.home_team }}</span>
+                                    <img src="https://flagcdn.com/w80/{{ m.home_flag }}.png" alt="{{ m.home_team }} Flag" class="flag-logo">
+                                </div>
+                                
+                                <div class="score-center">
+                                    <div class="score-display">
+                                        <span class="score-home">{{ m.home_score }}</span>
+                                        <span class="score-divider">:</span>
+                                        <span class="score-away">{{ m.away_score }}</span>
+                                    </div>
+                                    <div class="match-time-badge">FT</div>
+                                </div>
+                                
+                                <div class="team-display away">
+                                    <img src="https://flagcdn.com/w80/{{ m.away_flag }}.png" alt="{{ m.away_team }} Flag" class="flag-logo">
+                                    <span class="team-name">{{ m.away_team }}</span>
+                                </div>
+                            </div>
+                            
+                            {% if m.events %}
+                            <div class="match-events-timeline">
+                                {% for e in m.events %}
+                                <div class="timeline-event">
+                                    <span class="event-icon-circle 
+                                        {% if e.type == 'goal' %}goal
+                                        {% elif e.type == 'yellow_card' %}yellow
+                                        {% elif e.type == 'red_card' %}red
+                                        {% elif e.type == 'substitution' %}sub
+                                        {% else %}whistle{% endif %}">
+                                        {% if e.type == 'goal' %}⚽
+                                        {% elif e.type == 'yellow_card' %}🟨
+                                        {% elif e.type == 'red_card' %}🟥
+                                        {% elif e.type == 'substitution' %}🔄
+                                        {% else %}🏁{% endif %}
+                                    </span>
+                                    <span class="event-time">{% if e.minute > 0 %}{{ e.minute }}'{% else %}-{% endif %}</span>
+                                    <span class="event-text">{{ e.detail }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </section>
+            
+            <!-- Right Column: Standings tables -->
+            <section class="standings-panel-container" aria-label="Group Standings">
+                <div class="panel">
+                    <div class="panel-title">
+                        <h2>Group Standings</h2>
+                    </div>
+
+                    <!-- Groups Tab Navigation -->
+                    <div class="groups-tabs-wrapper">
+                        <div class="groups-tabs-bar" id="groups-tabs">
+                            {% for group_name in standings.keys()|sort %}
+                            <button class="group-tab-btn {% if loop.first %}active{% endif %}" data-group="{{ group_name|replace(' ', '-') }}">
+                                {{ group_name.replace('Group ', '') }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    {% for group_name, group_teams in standings.items() %}
+                    <div class="standings-group-tab-content {% if not loop.first %}hidden{% endif %}" id="group-content-{{ group_name|replace(' ', '-') }}">
+                        <div class="group-title">{{ group_name }} Standings</div>
+                        <table class="standings-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Team</th>
+                                    <th>P</th>
+                                    <th>W</th>
+                                    <th>D</th>
+                                    <th>L</th>
+                                    <th>GD</th>
+                                    <th>PTS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="standings-body-{{ group_name|replace(' ', '-') }}">
+                                {% for team in group_teams %}
+                                <tr class="{% if loop.index <= 2 %}qualify-zone{% endif %}">
+                                    <td class="team-cell">
+                                        <img src="https://flagcdn.com/w80/{{ team.flag_code }}.png" alt="{{ team.name }} Flag" class="flag-logo-mini">
+                                        <strong>{{ team.name }}</strong>
+                                    </td>
+                                    <td>{{ team.P }}</td>
+                                    <td>{{ team.W }}</td>
+                                    <td>{{ team.D }}</td>
+                                    <td>{{ team.L }}</td>
+                                    <td>{% if team.GD >= 0 %}+{% endif %}{{ team.GD }}</td>
+                                    <td class="pts-cell">{{ team.PTS }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Frontend logic -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
